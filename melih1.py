@@ -14610,20 +14610,25 @@ def export_excel():
         # ✅ SATIR YÜKSEKLİĞİNİ ARTIR (40 → 50)
         ws.row_dimensions[1].height = 50
 
-        all_slots = []
-        for teacher in teachers:
-            for day_schedule in teacher['schedule']:
-                day = day_schedule['day']
-                for lesson in day_schedule['lessons']:
-                    slot_key = f"{day}_{lesson['start_time']}_{lesson['end_time']}"
-                    slot_info = {
-                        'day': day,
-                        'start_time': lesson['start_time'],
-                        'end_time': lesson['end_time'],
+        # 🔥 DİNAMİK SLOT LİSTESİ - schedule_data'dan topla (swap'ler dahil!)
+        week_data = schedule_data['weeks'][week_num - 1]
+        all_slots_dict = {}
+        for lesson in week_data:
+            # Zaman formatını parse et (örn: "09:00-10:00")
+            time_parts = lesson['time'].split('-')
+            if len(time_parts) == 2:
+                start_time = time_parts[0]
+                end_time = time_parts[1]
+                slot_key = f"{lesson['day']}_{start_time}_{end_time}"
+                if slot_key not in all_slots_dict:
+                    all_slots_dict[slot_key] = {
+                        'day': lesson['day'],
+                        'start_time': start_time,
+                        'end_time': end_time,
                         'key': slot_key
                     }
-                    if slot_info not in all_slots:
-                        all_slots.append(slot_info)
+
+        all_slots = list(all_slots_dict.values())
 
         day_order = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar']
         all_slots.sort(key=lambda x: (day_order.index(x['day']), x['start_time']))
